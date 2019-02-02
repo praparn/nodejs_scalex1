@@ -1,0 +1,57 @@
+============================================================================================
+Lab Description
+============================================================================================
+Machine name		            			        Roles:						IP Address: (Private)		IP Address: (Public)       SSH
+Training_NodeJS_Scaling_StudentG1_1    	            Load Test Machine			10.21.1.27					52.221.241.207		       ssh -i "lab_gluster.pem" ubuntu@52.221.241.207
+Training_NodeJS_Scaling_StudentG1_2                 WebServer Docker		    10.21.1.120				    18.136.104.148             ssh -i "lab_gluster.pem" ubuntu@18.136.104.148 
+Training_NodeJS_Scaling_StudentG1_3       	        NodePort					10.21.1.164					18.136.211.235             ssh -i "lab_gluster.pem" ubuntu@18.136.211.235          
+
+============================================================================================
+Step 1: Setup basic meanstack for operate load test (WebServer Docker)
+============================================================================================
+1. Clone meanstack by command: 
+    cd ~/
+    git clone https://github.com/meanjs/mean.git meanjs
+    cd meanjs/
+
+2. Edit dockerfile before operate by command:
+    sed -i -e 's/FROM ubuntu:latest/FROM ubuntu:16.04/g' Dockerfile-production
+    sed -i -e 's/FROM ubuntu:latest/FROM ubuntu:16.04/g' Dockerfile
+
+3. Start basic meanstack by command:
+    docker image build -t mean .
+    docker container run -dt -p 27017:27017 -d --name db mongo
+    docker container run -dt -p 80:3000 --link db:db_1 --name mean mean
+    docker container ls
+    docker logs -f mean
+
+    *Remark: 
+        3.1 Wait until mean ready with simple log below
+        3.2 In case need to remove and redeploy please kindly following command below:
+            docker stop mean db && docker rm mean db
+
+---------------------------------------------------------------------------------------------
+MEAN.JS - Development Environment
+
+Environment:     development
+Server:          http://0.0.0.0:3000
+Database:        mongodb://172.17.0.2/mean-dev
+App version:     0.6.0
+MEAN.JS version: 0.6.0
+---------------------------------------------------------------------------------------------
+
+4. Test access web from url: http://<public ip of WebServer Docker> and Signup with your account
+
+5. Run mongo-express for provide mongodb webgui by command:
+    docker pull mongo-express:0.49
+    docker container run -dt -p 8080:8081 --link db:mongo --name webmongo mongo-express:0.49
+
+6. Open mongo-express from url: http://<public ip of WebServer Docker>:8080
+
+7. Access to database (mean-dev) ==> collections (users) and check your data
+============================================================================================
+Step 2: Start Performance Test
+============================================================================================
+1. Open Jmeter GUI (If disapper. Please run /home/ubuntu/apache-jmeter-5.0/bin/jmeter)
+
+2. Define name of Test Plan to "NodeJS-Scaling"
